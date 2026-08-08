@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Work folders produced by a summary run (ingest.py writes these next to the
+# invocation, but keep them out if anyone runs the skill from inside the repo).
+*/manifest.json
+*/summary.md
+*/summary.typ
+*/summary.pdf

@@ -1,0 +1,136 @@
+# paper-summary
+
+A [Claude Code](https://claude.com/claude-code) skill that turns a research paper
+into a structured, grounded summary — and renders it to PDF.
+
+Give it an arXiv id, a local PDF, or a URL. It fetches the paper (preferring the
+**LaTeX source**, so equations and figures survive intact), writes a sectioned
+summary with every number traced back to the source, and produces a typeset PDF.
+
+## Why the LaTeX source matters
+
+Most tools read the PDF and get mangled equations and no usable figures. This one
+downloads the arXiv e-print source first, so:
+
+- equations come from the real `\begin{equation}`, not from OCR'd glyphs
+- figures are the original files, not screenshots — including `.eps`, which
+  older hep-ph/hep-th papers use almost exclusively
+- `\cite{}` keys resolve against the shipped `.bbl`, so related-work claims name
+  actual papers
+
+PDF and web extraction are the fallbacks, not the default path.
+
+## Install
+
+```bash
+git clone https://github.com/jinheungkim1216/paper-summary-skill.git
+cd paper-summary-skill
+./scripts/setup.sh     # check dependencies
+./deploy.sh            # install into ~/.claude/skills/paper-summary
+```
+
+### Dependencies
+
+**Required** — `uv` (runs `ingest.py` with its own deps), `pandoc` and `typst`
+(the PDF step).
+
+**Recommended** — `ghostscript` (converts EPS/PS figures; without it those
+figures are skipped), and a Hangul font for Korean output (macOS ships Apple SD
+Gothic Neo; on Linux install Noto Sans CJK KR or NanumGothic).
+
+```bash
+brew install uv pandoc typst ghostscript
+```
+
+`./scripts/setup.sh` reports exactly what is missing and how to install it.
+
+## Usage
+
+Once deployed, just ask Claude Code:
+
+```
+이 논문 요약해줘 https://arxiv.org/abs/1706.03762
+summarize arxiv 2005.14165
+(drop a PDF) 이거 정리해줘
+```
+
+Output lands in a per-paper folder in your current directory:
+
+```
+attention-is-all-you-need/
+├── manifest.json     # what was ingested, and how
+├── source/           # the paper's .tex / .pdf
+├── figures/          # extracted figures, normalized to PNG
+├── summary.md        # the deliverable
+└── summary.pdf       # typeset via pandoc → typst
+```
+
+## How it works
+
+The skill splits acquisition from writing. Scripts fetch and verify; the model
+reads and writes. It never re-implements downloading or parsing.
+
+```
+input → ingest.py → [model reads + writes] → verify.py → render_pdf.sh
+         manifest       summary.md            grounding      PDF
+```
+
+| Step | What happens |
+|---|---|
+| 1. Ingest | `ingest.py` resolves the input and writes `manifest.json` |
+| 2. Read | Two passes: skim for structure, then ground every claim |
+| 3. Domain | Apply the field-specific checklist from `domains/` |
+| 4. Write | `summary.md` from a fixed 10-section template |
+| 5. Verify | `verify.py` traces every number back to the source |
+| 6. Render | `md → typ → pdf` |
+| 7. Report | Paths, ingest method, warnings, accepted exceptions |
+
+### Grounding
+
+The summary format is built around not making things up:
+
+- numbers and quotes are copied verbatim; anything inferred is tagged `(추론)` /
+  `(inferred)` so it is never presented as the paper's own claim
+- each key claim carries a reference tag (`§4.1, Table 3`)
+- `verify.py` then checks the result — it extracts every number in the summary
+  and reports the ones it cannot find in the ingested source
+
+`verify.py` is deliberately conservative: reference tags, figure paths, layout
+attributes and inference-marked lines are excluded, because a false alarm costs
+more attention than a miss. It reports; it does not block (`--strict` changes
+that).
+
+```
+$ uv run scripts/verify.py ./attention-is-all-you-need
+verify: 7 number(s) checked, 1 not found in source
+
+  summary.md:8          99.7  |  - 정확도가 **99.7** 로 향상되었다 (§6.2, Table 3).
+```
+
+### Domain supplements
+
+`manifest.domain` is inferred from the arXiv category and selects a checklist:
+
+- **hep** — branches further on hep-ex / hep-ph / hep-th / hep-lat (luminosity
+  and systematics vs. EFT parameter space vs. lattice ensembles)
+- **ai** — architecture, training setup, compute, ablations, reproducibility
+- **physics** — regime of validity, governing equations, uncertainties
+- **general** — claim scope, evidence type, threats to validity
+
+## Development
+
+Skills are developed here and deployed with `./deploy.sh`; edit this repo, not
+`~/.claude/skills/`.
+
+```bash
+./tests/run.sh              # deps come from uv, no venv setup needed
+./tests/run.sh -q -k figure # single test
+```
+
+The suite covers figure-name collisions, EPS conversion, font selection across
+platforms, the stdout contract, remote-PDF routing, and the grounding checker's
+exclusion rules.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
