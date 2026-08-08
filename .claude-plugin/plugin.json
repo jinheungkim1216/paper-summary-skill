@@ -1,0 +1,7 @@
+{
+  "name": "paper-summary",
+  "description": "Claude Code skill that turns an arXiv id, local PDF, or URL into a structured, grounded summary and a typeset PDF. Prefers the arXiv LaTeX e-print source so equations, original figures (including EPS), and the .bbl survive intact; every number in the summary is traced back to the source before hand-off.",
+  "author": {
+    "name": "Jinheung Kim"
+  }
+}

@@ -22,16 +22,14 @@ PDF and web extraction are the fallbacks, not the default path.
 
 ## Install
 
-Clone straight into your Claude Code skills directory:
+In Claude Code:
 
-```bash
-git clone https://github.com/jinheungkim1216/paper-summary-skill.git \
-  ~/.claude/skills/paper-summary
-
-~/.claude/skills/paper-summary/scripts/setup.sh   # check dependencies
+```
+/plugin marketplace add jinheungkim1216/paper-summary-skill
+/plugin install paper-summary@paper-summary-skill
 ```
 
-Update later with `git -C ~/.claude/skills/paper-summary pull`.
+Update later with `/plugin marketplace update paper-summary-skill`.
 
 ### Dependencies
 
@@ -46,7 +44,8 @@ Gothic Neo; on Linux install Noto Sans CJK KR or NanumGothic).
 brew install uv pandoc typst ghostscript
 ```
 
-`./scripts/setup.sh` reports exactly what is missing and how to install it.
+`skills/paper-summary/scripts/setup.sh` reports exactly what is missing and how
+to install it.
 
 ## Usage
 
@@ -105,7 +104,7 @@ more attention than a miss. It reports; it does not block (`--strict` changes
 that).
 
 ```
-$ uv run scripts/verify.py ./attention-is-all-you-need
+$ uv run skills/paper-summary/scripts/verify.py ./attention-is-all-you-need
 verify: 7 number(s) checked, 1 not found in source
 
   summary.md:8          99.7  |  - 정확도가 **99.7** 로 향상되었다 (§6.2, Table 3).
@@ -123,18 +122,30 @@ verify: 7 number(s) checked, 1 not found in source
 
 ## Development
 
-Work in a separate clone rather than editing the installed copy, then pull the
-installed one forward:
+```
+paper-summary-skill/
+├── .claude-plugin/
+│   ├── plugin.json          # plugin manifest
+│   └── marketplace.json     # lets this repo be added as a marketplace on its own
+└── skills/paper-summary/
+    ├── SKILL.md             # the skill itself
+    ├── domains/             # per-field supplement checklists
+    ├── scripts/             # ingest.py, verify.py, render_pdf.sh, setup.sh
+    └── tests/
+```
+
+Edit a clone of this repo, not the installed copy:
 
 ```bash
 git clone https://github.com/jinheungkim1216/paper-summary-skill.git
 cd paper-summary-skill
 
-./tests/run.sh              # deps come from uv, no venv setup needed
-./tests/run.sh -q -k figure # a single test
-
-git push && git -C ~/.claude/skills/paper-summary pull
+./skills/paper-summary/tests/run.sh              # deps come from uv, no venv needed
+./skills/paper-summary/tests/run.sh -q -k figure # a single test
 ```
+
+There is no version field — the git SHA is the version, so pushing here is the
+release. Pick the change up with `/plugin marketplace update paper-summary-skill`.
 
 The suite covers figure-name collisions, EPS conversion, font selection across
 platforms, the stdout contract, remote-PDF routing, and the grounding checker's

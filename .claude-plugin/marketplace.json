@@ -1,0 +1,13 @@
+{
+  "name": "paper-summary-skill",
+  "owner": {
+    "name": "Jinheung Kim"
+  },
+  "plugins": [
+    {
+      "name": "paper-summary",
+      "source": "./",
+      "description": "Turn an arXiv id, local PDF, or URL into a structured, grounded summary and a typeset PDF. Prefers the arXiv LaTeX e-print source so equations, original figures (including EPS), and the .bbl survive intact. Ships an ingestion engine, per-field domain checklists (hep-ex/ph/th/lat, ai, physics), a grounding checker that traces every number back to the source, and a pandoc-to-typst renderer with Korean support."
+    }
+  ]
+}
