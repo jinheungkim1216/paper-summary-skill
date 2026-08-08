@@ -22,12 +22,16 @@ PDF and web extraction are the fallbacks, not the default path.
 
 ## Install
 
+Clone straight into your Claude Code skills directory:
+
 ```bash
-git clone https://github.com/jinheungkim1216/paper-summary-skill.git
-cd paper-summary-skill
-./scripts/setup.sh     # check dependencies
-./deploy.sh            # install into ~/.claude/skills/paper-summary
+git clone https://github.com/jinheungkim1216/paper-summary-skill.git \
+  ~/.claude/skills/paper-summary
+
+~/.claude/skills/paper-summary/scripts/setup.sh   # check dependencies
 ```
+
+Update later with `git -C ~/.claude/skills/paper-summary pull`.
 
 ### Dependencies
 
@@ -46,7 +50,7 @@ brew install uv pandoc typst ghostscript
 
 ## Usage
 
-Once deployed, just ask Claude Code:
+Once installed, just ask Claude Code:
 
 ```
 이 논문 요약해줘 https://arxiv.org/abs/1706.03762
@@ -119,12 +123,17 @@ verify: 7 number(s) checked, 1 not found in source
 
 ## Development
 
-Skills are developed here and deployed with `./deploy.sh`; edit this repo, not
-`~/.claude/skills/`.
+Work in a separate clone rather than editing the installed copy, then pull the
+installed one forward:
 
 ```bash
+git clone https://github.com/jinheungkim1216/paper-summary-skill.git
+cd paper-summary-skill
+
 ./tests/run.sh              # deps come from uv, no venv setup needed
-./tests/run.sh -q -k figure # single test
+./tests/run.sh -q -k figure # a single test
+
+git push && git -C ~/.claude/skills/paper-summary pull
 ```
 
 The suite covers figure-name collisions, EPS conversion, font selection across
