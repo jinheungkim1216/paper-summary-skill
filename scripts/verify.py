@@ -36,6 +36,8 @@ NUMBER_RE = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 # Spans that contain digits but assert nothing about the paper.
 NOISE_PATTERNS = [
     re.compile(r"!?\[[^\]]*\]\([^)]*\)"),        # markdown links and images
+    re.compile(r"(?:arXiv:)?\d{4}\.\d{4,5}(?:v\d+)?"),          # arXiv id, new style
+    re.compile(r"[a-z][a-z\-]+(?:\.[A-Z]{2})?/\d{7}(?:v\d+)?"),  # arXiv id, old style
     re.compile(r"\{[^}]*\}"),                    # pandoc attrs, e.g. { width=60% }
     re.compile(r"`[^`]*`"),                      # inline code
     re.compile(r"^\s{0,3}#{1,6}\s.*$", re.M),    # headings
@@ -84,6 +86,10 @@ def extract_numbers(markdown: str) -> list[Number]:
     """Every number in the summary that asserts a value taken from the paper."""
     out: list[Number] = []
     for i, raw in enumerate(markdown.splitlines(), start=1):
+        # The template's `> 저자 · 출처 · 연도 · 도메인` header states provenance,
+        # not findings, and it is mandatory — checking it misfires every run.
+        if raw.lstrip().startswith(">"):
+            continue
         if INFERENCE_RE.search(raw):
             continue
         cleaned = scrub(raw)

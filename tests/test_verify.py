@@ -75,6 +75,22 @@ def test_reference_tags_are_not_claims():
     assert nums("성능이 올랐다 (§2, 표 1, 그림 2, 식 3)") == []
 
 
+def test_metadata_header_line_is_not_checked():
+    """The template's `> 저자 · 출처 · 연도 · 도메인` line is provenance.
+
+    It is mandatory in every summary, so treating it as claims made the checker
+    fire a false alarm on literally every run.
+    """
+    assert nums("> Vaswani et al. · arXiv:1706.03762 · 2017 · ai") == []
+
+
+def test_arxiv_ids_are_not_claims():
+    """Identifiers carry digits but assert nothing about the paper."""
+    assert nums("원 논문 hep-ex/0012045 의 후속 연구다.") == []
+    assert nums("arXiv:2005.14165 에서 제안되었다.") == []
+    assert nums("2301.12345v3 을 참조했다.") == []
+
+
 def test_ordered_list_markers_are_not_claims():
     assert nums("1. 첫 번째 기여\n2. 두 번째 기여") == []
 
